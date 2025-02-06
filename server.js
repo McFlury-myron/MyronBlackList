@@ -9,29 +9,38 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
+const configPath = path.join(__dirname, "config.json");
 const excludedPath = path.join(__dirname, "excluded.json");
 
-// 📌 Funkcja do wczytywania danych z excluded.json
-function getExcludedData() {
-    if (!fs.existsSync(excludedPath)) {
-        return { excludedNicknames: [], excludedUUIDs: [] };
+// 📌 Funkcja do pobierania hasła admina
+function getAdminToken() {
+    if (!fs.existsSync(configPath)) {
+        return "default-token"; // Domyślny token (zmień go w `config.json`)
     }
-    return JSON.parse(fs.readFileSync(excludedPath, "utf-8"));
+    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    return config.adminToken;
 }
 
-// 📌 Pobieranie listy wykluczonych graczy
+// 📌 Pobieranie wykluczonych graczy
 app.get("/excluded", (req, res) => {
-    res.json(getExcludedData());
+    if (!fs.existsSync(excludedPath)) {
+        return res.status(404).json({ error: "Brak pliku excluded.json" });
+    }
+    res.sendFile(excludedPath);
 });
 
-// 📌 Dodawanie wykluczonych nicków i UUID-ów
+// 📌 Dodawanie wykluczonych graczy (z hasłem)
 app.post("/excluded/add", (req, res) => {
-    const { nick, uuid } = req.body;
-    if (!nick && !uuid) {
-        return res.status(400).json({ error: "Brak nicka lub UUID" });
+    const { token, nick, uuid } = req.body;
+
+    if (token !== getAdminToken()) {
+        return res.status(403).json({ error: "Brak uprawnień!" });
     }
 
-    let excludedData = getExcludedData();
+    let excludedData = { excludedNicknames: [], excludedUUIDs: [] };
+    if (fs.existsSync(excludedPath)) {
+        excludedData = JSON.parse(fs.readFileSync(excludedPath, "utf-8"));
+    }
 
     if (nick && !excludedData.excludedNicknames.includes(nick)) {
         excludedData.excludedNicknames.push(nick);
@@ -41,17 +50,21 @@ app.post("/excluded/add", (req, res) => {
     }
 
     fs.writeFileSync(excludedPath, JSON.stringify(excludedData, null, 4));
-    res.json({ message: "Dodano do wykluczonych!", data: excludedData });
+    res.json({ message: "Dodano do wykluczonych!" });
 });
 
-// 📌 Usuwanie wykluczonych nicków i UUID-ów
+// 📌 Usuwanie wykluczonych graczy (z hasłem)
 app.post("/excluded/remove", (req, res) => {
-    const { nick, uuid } = req.body;
-    if (!nick && !uuid) {
-        return res.status(400).json({ error: "Brak nicka lub UUID" });
+    const { token, nick, uuid } = req.body;
+
+    if (token !== getAdminToken()) {
+        return res.status(403).json({ error: "Brak uprawnień!" });
     }
 
-    let excludedData = getExcludedData();
+    let excludedData = { excludedNicknames: [], excludedUUIDs: [] };
+    if (fs.existsSync(excludedPath)) {
+        excludedData = JSON.parse(fs.readFileSync(excludedPath, "utf-8"));
+    }
 
     if (nick) {
         excludedData.excludedNicknames = excludedData.excludedNicknames.filter(n => n !== nick);
@@ -61,7 +74,7 @@ app.post("/excluded/remove", (req, res) => {
     }
 
     fs.writeFileSync(excludedPath, JSON.stringify(excludedData, null, 4));
-    res.json({ message: "Usunięto z wykluczonych!", data: excludedData });
+    res.json({ message: "Usunięto z wykluczonych!" });
 });
 
 // Uruchomienie serwera
