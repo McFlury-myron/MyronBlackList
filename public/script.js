@@ -1,23 +1,54 @@
-async function checkBan() {
-    const input = document.getElementById("searchInput").value.trim();
-    const resultElement = document.getElementById("result");
+const apiUrl = "https://myronblacklist.onrender.com";
 
-    if (!input) {
-        resultElement.innerHTML = "⚠️ Wpisz IP lub UUID!";
-        return;
-    }
+async function fetchExcluded() {
+    const response = await fetch(apiUrl + "/excluded");
+    const data = await response.json();
+    const list = document.getElementById("excludedList");
+    list.innerHTML = "";
 
-    try {
-        const response = await fetch('/bans');
-        const data = await response.json();
+    data.excludedNicknames.forEach(nick => {
+        const li = document.createElement("li");
+        li.textContent = "Nick: " + nick;
+        list.appendChild(li);
+    });
 
-        if (data.bannedIPs.includes(input) || data.bannedUUIDs.includes(input)) {
-            resultElement.innerHTML = "❌ Ten użytkownik jest zbanowany!";
-        } else {
-            resultElement.innerHTML = "✅ Nie ma bana!";
-        }
-    } catch (error) {
-        resultElement.innerHTML = "❌ Błąd połączenia z serwerem.";
-        console.error(error);
-    }
+    data.excludedUUIDs.forEach(uuid => {
+        const li = document.createElement("li");
+        li.textContent = "UUID: " + uuid;
+        list.appendChild(li);
+    });
 }
+
+async function addExcluded() {
+    const token = document.getElementById("token").value;
+    const nick = document.getElementById("nick").value;
+    const uuid = document.getElementById("uuid").value;
+
+    const response = await fetch(apiUrl + "/excluded/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, nick, uuid })
+    });
+
+    const result = await response.json();
+    alert(result.message || result.error);
+    fetchExcluded();
+}
+
+async function removeExcluded() {
+    const token = document.getElementById("token").value;
+    const nick = document.getElementById("nick").value;
+    const uuid = document.getElementById("uuid").value;
+
+    const response = await fetch(apiUrl + "/excluded/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, nick, uuid })
+    });
+
+    const result = await response.json();
+    alert(result.message || result.error);
+    fetchExcluded();
+}
+
+fetchExcluded();
