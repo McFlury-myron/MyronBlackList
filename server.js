@@ -5,9 +5,11 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.static('public')); // Serwowanie plików z folderu public
+
 // Endpoint do pobierania listy banów
 app.get('/bans', (req, res) => {
-    const filePath = path.join(__dirname, 'banlist.json'); // Plik z banami
+    const filePath = path.join(__dirname, 'banlist.json');
     if (fs.existsSync(filePath)) {
         const data = fs.readFileSync(filePath, 'utf-8');
         res.json(JSON.parse(data));
@@ -16,7 +18,6 @@ app.get('/bans', (req, res) => {
     }
 });
 
-// Uruchomienie serwera
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
