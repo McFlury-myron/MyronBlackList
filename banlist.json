@@ -1,4 +1,12 @@
 {
-  "bannedIPs": ["127.0.0.1", "185.78.148.8"],
-  "bannedUUIDs": ["448629d5-1d17-422c-80c8-10554e1fefa6", "ae1f8226-28dd-4493-9e3a-12f4debb767d", "ca921687-2844-4242-adb9-7f881ad6a97e"]
+  "bannedPlayers": {
+    "Meabx": {
+      "127.0.0.1": "Nie możesz dołączyć z tego IP!",
+      "448629d5-1d17-422c-80c8-10554e1fefa6": "Nie masz wstępu na ten serwer!"
+    },
+    "Ochlopczyku_": {
+      "185.78.148.8": "Twoje IP jest na czarnej liście!",
+      "123e4567-e89b-12d3-a456-426614174000": "Nie masz wstępu na ten serwer!"
+    }
+  }
 }
